@@ -1,0 +1,69 @@
+# CircleCI pipelines are the highest-level unit of work,
+# encompassing a project’s full .circleci/config.yml file.
+# Pipelines include your workflows, which coordinate your jobs.
+
+#######################################################################
+# version of CircleCI pipeline process engine.
+version: 2.1
+
+# Define a job to be invoked later in a workflow.
+# your configuration needs a job to run, and an execution environment for that job to run in
+# For each job in your project config you will specify an execution environment by assigning it an executor. An executor defines the underlying technology or environment in which to run a job, and which image to use to best-suit your project.
+# add steps to our job. Steps are a list of commands to run inside the environment.
+jobs:
+    build:
+        # Specify the execution environment. You can specify an image from Dockerhub or use one of our Convenience Images from CircleCI's Developer Hub.
+        docker:
+            - image: circleci/node:13.8.0
+        # Add steps to the job
+        steps:
+            # The checkout: key is required under steps to checkout your code
+            # This command fetches the code from your git repo
+            - checkout
+            - run:
+                  name: "install dependences"
+                  command: "npm run lint"
+            - save_cache:
+                key: 'npm-dependences'
+                paths:
+                  - /src/node-modules
+
+    test:
+        docker:
+            - image: circleci/node:13.8.0
+        # Add steps to the job
+        steps:
+            - checkout
+            - restore_cache:
+                keys:
+                    - 'npm-dependences'
+            - run:
+                  name: "run test"
+                  command: "npm run test"
+
+    analize:
+        docker:
+            - image: circleci/node:13.8.0
+        # Add steps to the job
+        steps:
+            - checkout
+            - restore_cache:
+                keys:
+                    - 'npm-dependences'
+            - run:
+                  name: "Check for security flows!"
+                  command: "npm audit"
+
+# Invoke jobs via workflows
+# Jobs are orchestrated using workflows,which is a set of rules defining a collection of jobs and their run order.
+workflows:
+    say-hello-workflow:
+        jobs:
+            - build
+            - test:
+                requires:
+                    - build
+            - analize:
+                requires:
+                    - test
+
