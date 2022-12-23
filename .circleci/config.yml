@@ -20,13 +20,16 @@ jobs:
             # The checkout: key is required under steps to checkout your code
             # This command fetches the code from your git repo
             - checkout
-            - run:
-                  name: "install dependences"
-                  command: "npm run lint"
+            - run: npm install
             - save_cache:
                 key: 'npm-dependences'
                 paths:
                   - /src/node-modules
+            - run:
+                name: "checking lint"
+                command: "npm run lint"
+            
+                  
 
     test:
         docker:
@@ -37,6 +40,7 @@ jobs:
             - restore_cache:
                 keys:
                     - 'npm-dependences'
+            - run: npm install
             - run:
                   name: "run test"
                   command: "npm run test"
@@ -50,6 +54,7 @@ jobs:
             - restore_cache:
                 keys:
                     - 'npm-dependences'
+            - run: npm install
             - run:
                   name: "Check for security flows!"
                   command: "npm audit"
